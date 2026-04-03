@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EventIQ — Cotizador Inteligente de Eventos</title>
+  <meta name="description" content="Obtén una cotización aproximada para tu boda, quinceañera o evento corporativo en menos de 3 minutos. Impulsado por inteligencia artificial." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E8D5A3;
+      --gold-dim: #8A6F32;
+      --dark-bg: #0E0E0E;
+      --dark-surface: #161616;
+      --dark-card: #1E1E1E;
+      --dark-border: rgba(201,168,76,0.2);
+      --dark-border-hover: rgba(201,168,76,0.5);
+      --text-primary: #F5F0E8;
+      --text-muted: #8C8880;
+      --accent-wedding: #D4A5B5;
+      --accent-corp: #7BA4C7;
+      --radius: 4px;
+      --radius-lg: 8px;
+      --max-width: 760px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ── */
+    .eq-header {
+      padding: 24px 32px;
+      border-bottom: 0.5px solid var(--dark-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: rgba(14,14,14,0.95);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+
+    .eq-logo { display: flex; align-items: baseline; gap: 3px; text-decoration: none; }
+    .eq-logo-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+    .eq-logo-dot {
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      margin-bottom: 2px;
+    }
+    .eq-logo-sub {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 300;
+    }
+    .eq-tagline {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── HERO ── */
+    .eq-hero {
+      text-align: center;
+      padding: 64px 32px 48px;
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+    .eq-hero-eyebrow {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+      font-weight: 400;
+    }
+    .eq-hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 40px;
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    .eq-hero-title em { font-style: italic; color: var(--gold); }
+    .eq-hero-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      font-weight: 300;
+      max-width: 460px;
+      margin: 0 auto 12px;
+      line-height: 1.7;
+    }
+    .eq-hero-pills {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .eq-pill {
+      font-size: 11px;
+      padding: 5px 14px;
+      border: 0.5px solid var(--dark-border);
+      border-radius: 20px;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+
+    /* ── COTIZADOR CONTAINER ── */
+    .eq-quoter {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 32px 64px;
+    }
+
+    /* ── STEPPER ── */
+    .eq-step-indicator {
+      display: flex;
+      align-items: center;
+      margin-bottom: 36px;
+    }
+    .eq-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 400;
+      transition: color 0.3s;
+    }
+    .eq-step.active { color: var(--gold); }
+    .eq-step.done { color: var(--gold-dim); }
+    .eq-step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 0.5px solid currentColor;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+    .eq-step.active .eq-step-num {
+      background: var(--gold); color: var(--dark-bg);
+      border-color: var(--gold); font-weight: 500;
+    }
+    .eq-step.done .eq-step-num {
+      background: var(--gold-dim); color: var(--dark-bg);
+      border-color: var(--gold-dim);
+    }
+    .eq-step-line {
+      flex: 1; height: 0.5px;
+      background: var(--dark-border);
+      margin: 0 12px;
+    }
+
+    /* ── SECTIONS ── */
+    .eq-section { display: none; animation: fadeIn 0.3s ease; }
+    .eq-section.visible { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── TYPOGRAPHY ── */
+    .eq-headline {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 400;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+    .eq-headline em { font-style: italic; color: var(--gold); }
+    .eq-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    /* ── TYPE CARDS ── */
+    .eq-type-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .eq-type-card {
+      border: 0.5px solid var(--dark-border);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--dark-surface);
+      position: relative;
+    }
+    .eq-type-card:hover { border-color: var(--dark-border-hover); background: var(--dark-card); }
+    .eq-type-card.selected-wedding { border-color: var(--accent-wedding); background: rgba(212,165,181,0.07); }
+    .eq-type-card.selected-corp { border-color: var(--accent-corp); background: rgba(123,164,199,0.07); }
+    .eq-type-icon { font-size: 24px; margin-bottom: 12px; display: block; }
+    .eq-type-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .eq-type-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; font-weight: 300; }
+    .eq-type-badge {
+      position: absolute; top: 14px; right: 14px;
+      font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 2px; font-weight: 500;
+    }
+    .badge-wedding { background: rgba(212,165,181,0.15); color: var(--accent-wedding); border: 0.5px solid rgba(212,165,181,0.3); }
+    .badge-corp { background: rgba(123,164,199,0.15); color: var(--accent-corp); border: 0.5px solid rgba(123,164,199,0.3); }
+
+    /* ── FORM ── */
+    .eq-field-group { margin-bottom: 20px; }
+    .eq-label {
+      font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 8px; display: block; font-weight: 400;
+    }
+    .eq-input, .eq-select {
+      width: 100%;
+      background: var(--dark-surface);
+      border: 0.5px solid var(--dark-border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .eq-input:focus, .eq-select:focus { border-color: var(--dark-border-hover); }
+    .eq-input::placeholder { color: var(--text-muted); }
+    .eq-select option { background: #1E1E1E; color: var(--text-primary); }
+    .eq-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── SLIDER ── */
+    .eq-slider-wrap { display: flex; align-items: center; gap: 14px; }
+    .eq-slider {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 2px; background: var(--dark-border);
+      border-radius: 1px; outline: none; cursor: pointer;
+    }
+    .eq-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--gold); cursor: pointer;
+      border: 2px solid var(--dark-bg);
+      box-shadow: 0 0 0 1px var(--gold);
+    }
+    .eq-slider::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--gold); cursor: pointer;
+      border: 2px solid var(--dark-bg);
+    }
+    .eq-slider-val { font-size: 14px; font-weight: 500; color: var(--gold); min-width: 90px; text-align: right; }
+
+    /* ── SERVICES GRID ── */
+    .eq-services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .eq-service-chip {
+      border: 0.5px solid var(--dark-border);
+      border-radius: var(--radius);
+      padding: 10px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--dark-surface);
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text-muted); font-weight: 400;
+      user-select: none;
+    }
+    .eq-service-chip:hover { border-color: var(--dark-border-hover); color: var(--text-primary); }
+    .eq-service-chip.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.07); }
+    .chip-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      border: 1px solid currentColor; flex-shrink: 0; transition: background 0.15s;
+    }
+    .eq-service-chip.active .chip-dot { background: var(--gold); }
+
+    /* ── BUTTONS ── */
+    .eq-btn-primary {
+      width: 100%; padding: 14px;
+      background: var(--gold); color: var(--dark-bg);
+      border: none; border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase;
+      cursor: pointer; transition: background 0.2s;
+      margin-top: 24px;
+    }
+    .eq-btn-primary:hover:not(:disabled) { background: var(--gold-light); }
+    .eq-btn-primary:disabled { background: var(--gold-dim); cursor: not-allowed; opacity: 0.6; }
+    .eq-btn-secondary {
+      background: transparent;
+      border: 0.5px solid var(--dark-border);
+      color: var(--text-muted);
+      padding: 11px 18px;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px; cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.5px;
+    }
+    .eq-btn-secondary:hover { border-color: var(--dark-border-hover); color: var(--text-primary); }
+
+    /* ── LOADING ── */
+    .eq-loading {
+      display: none; flex-direction: column;
+      align-items: center; padding: 64px 0; gap: 16px;
+    }
+    .eq-loading.visible { display: flex; }
+    .eq-spinner {
+      width: 36px; height: 36px;
+      border: 1px solid var(--dark-border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .eq-loading-text {
+      font-size: 11px; color: var(--text-muted);
+      letter-spacing: 2px; text-transform: uppercase; font-weight: 300;
+    }
+
+    /* ── RESULT ── */
+    .eq-result { display: none; }
+    .eq-result.visible { display: block; animation: fadeIn 0.4s ease; }
+    .eq-result-header {
+      border-bottom: 0.5px solid var(--dark-border);
+      padding-bottom: 20px; margin-bottom: 24px;
+    }
+    .eq-result-event-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; font-weight: 400; margin-bottom: 5px;
+    }
+    .eq-result-meta { font-size: 12px; color: var(--text-muted); font-weight: 300; }
+    .eq-total-card {
+      background: var(--dark-surface);
+      border: 0.5px solid var(--dark-border);
+      border-radius: var(--radius-lg);
+      padding: 22px 26px; margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .eq-total-label {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 8px;
+    }
+    .eq-total-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px; color: var(--gold); font-weight: 600;
+    }
+    .eq-total-range { font-size: 11px; color: var(--text-muted); margin-top: 5px; font-weight: 300; }
+    .eq-total-icon {
+      width: 52px; height: 52px;
+      border: 0.5px solid var(--dark-border); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .eq-breakdown-title {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--text-muted); margin-bottom: 10px;
+    }
+    .eq-breakdown-list { list-style: none; display: flex; flex-direction: column; gap: 2px; margin-bottom: 20px; }
+    .eq-breakdown-item {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px; background: var(--dark-surface);
+      border-radius: var(--radius); transition: background 0.15s;
+    }
+    .eq-breakdown-item:hover { background: var(--dark-card); }
+    .eq-bi-left { display: flex; align-items: center; gap: 12px; }
+    .eq-bi-icon { font-size: 14px; width: 24px; text-align: center; flex-shrink: 0; }
+    .eq-bi-name { font-size: 13px; color: var(--text-primary); font-weight: 400; }
+    .eq-bi-note { font-size: 11px; color: var(--text-muted); margin-top: 1px; font-weight: 300; }
+    .eq-bi-price { font-size: 13px; color: var(--text-primary); font-weight: 500; text-align: right; }
+    .eq-bi-range { font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 1px; }
+    .eq-ai-note {
+      background: rgba(201,168,76,0.06);
+      border: 0.5px solid rgba(201,168,76,0.2);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 12px; color: var(--text-muted);
+      line-height: 1.7; margin-bottom: 24px; font-weight: 300;
+    }
+    .eq-ai-note strong { color: var(--gold); font-weight: 500; }
+
+    /* ── CTA ── */
+    .eq-cta-section {
+      border-top: 0.5px solid var(--dark-border);
+      padding-top: 20px;
+      display: flex; gap: 14px; align-items: center;
+    }
+    .eq-cta-text { font-size: 12px; color: var(--text-muted); flex: 1; font-weight: 300; line-height: 1.5; }
+    .eq-cta-btn {
+      background: var(--gold); color: var(--dark-bg);
+      border: none; border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 12px 20px; cursor: pointer;
+      white-space: nowrap; transition: background 0.2s;
+      text-decoration: none; display: inline-block;
+    }
+    .eq-cta-btn:hover { background: var(--gold-light); }
+
+    /* ── ERROR ── */
+    .eq-error {
+      background: rgba(226,75,74,0.08);
+      border: 0.5px solid rgba(226,75,74,0.3);
+      border-radius: var(--radius);
+      padding: 11px 14px;
+      font-size: 12px; color: #E24B4A;
+      margin-top: 12px; display: none;
+    }
+    .eq-error.visible { display: block; }
+
+    /* ── FOOTER ── */
+    .eq-footer {
+      border-top: 0.5px solid var(--dark-border);
+      padding: 28px 32px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .eq-footer-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px; color: var(--text-muted);
+    }
+    .eq-footer-note { font-size: 11px; color: var(--text-muted); font-weight: 300; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .eq-hero { padding: 40px 20px 32px; }
+      .eq-hero-title { font-size: 28px; }
+      .eq-quoter { padding: 0 20px 48px; }
+      .eq-type-grid { grid-template-columns: 1fr; }
+      .eq-grid-2 { grid-template-columns: 1fr; }
+      .eq-services-grid { grid-template-columns: repeat(2, 1fr); }
+      .eq-cta-section { flex-direction: column; align-items: flex-start; }
+      .eq-header { padding: 18px 20px; }
+      .eq-tagline { display: none; }
+      .eq-footer { flex-direction: column; gap: 8px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="eq-header">
+    <a class="eq-logo" href="#">
+      <span class="eq-logo-text">EventIQ</span>
+      <div class="eq-logo-dot"></div>
+      <span class="eq-logo-sub">mx</span>
+    </a>
+    <span class="eq-tagline">Cotizador Inteligente</span>
+  </header>
+
+  <!-- HERO -->
+  <section class="eq-hero">
+    <p class="eq-hero-eyebrow">Inteligencia artificial · Mercado mexicano</p>
+    <h1 class="eq-hero-title">Tu evento, <em>cotizado</em><br>en 3 minutos</h1>
+    <p class="eq-hero-desc">Describe tu evento y obtén un presupuesto desglosado con precios reales del mercado mexicano. Sin esperas, sin formularios interminables.</p>
+    <div class="eq-hero-pills">
+      <span class="eq-pill">Bodas de lujo</span>
+      <span class="eq-pill">Quinceañeras</span>
+      <span class="eq-pill">Eventos corporativos</span>
+      <span class="eq-pill">Sin costo</span>
+    </div>
+  </section>
+
+  <!-- COTIZADOR -->
+  <main class="eq-quoter">
+
+    <!-- STEPPER -->
+    <div class="eq-step-indicator">
+      <div class="eq-step active" id="s1"><div class="eq-step-num">1</div><span>Tipo</span></div>
+      <div class="eq-step-line"></div>
+      <div class="eq-step" id="s2"><div class="eq-step-num">2</div><span>Detalles</span></div>
+      <div class="eq-step-line"></div>
+      <div class="eq-step" id="s3"><div class="eq-step-num">3</div><span>Servicios</span></div>
+      <div class="eq-step-line"></div>
+      <div class="eq-step" id="s4"><div class="eq-step-num">4</div><span>Cotización</span></div>
+    </div>
+
+    <!-- STEP 1: TIPO -->
+    <div class="eq-section visible" id="section-1">
+      <h2 class="eq-headline">¿Qué tipo de evento<br>estás <em>planeando?</em></h2>
+      <p class="eq-sub">En menos de 3 minutos tendrás un presupuesto desglosado con proveedores verificados.</p>
+      <div class="eq-type-grid">
+        <div class="eq-type-card" id="card-wedding" onclick="selectType('wedding')">
+          <span class="eq-type-badge badge-wedding">Premium</span>
+          <span class="eq-type-icon">✦</span>
+          <div class="eq-type-title">Boda & Quinceañera</div>
+          <div class="eq-type-desc">Ceremonias, recepciones, eventos sociales de alto nivel.</div>
+        </div>
+        <div class="eq-type-card" id="card-corp" onclick="selectType('corp')">
+          <span class="eq-type-badge badge-corp">Corporativo</span>
+          <span class="eq-type-icon">◈</span>
+          <div class="eq-type-title">Evento Empresarial</div>
+          <div class="eq-type-desc">Lanzamientos, congresos, team building, cenas directivas.</div>
+        </div>
+      </div>
+      <button class="eq-btn-primary" id="btn-step1" onclick="goStep(2)" disabled>Continuar</button>
+    </div>
+
+    <!-- STEP 2: DETALLES -->
+    <div class="eq-section" id="section-2">
+      <h2 class="eq-headline">Cuéntanos sobre<br>tu <em>evento</em></h2>
+      <p class="eq-sub">Información básica para generar un estimado preciso.</p>
+      <div class="eq-field-group">
+        <label class="eq-label" for="city">Ciudad del evento</label>
+        <select class="eq-select" id="city">
+          <option value="">Selecciona una ciudad</option>
+          <option value="San Luis Potosí">San Luis Potosí</option>
+          <option value="Querétaro">Querétaro</option>
+          <option value="Torreón">Torreón</option>
+          <option value="Monterrey">Monterrey</option>
+          <option value="Ciudad de México">Ciudad de México</option>
+          <option value="Guadalajara">Guadalajara</option>
+          <option value="Cancún">Cancún</option>
+          <option value="Puebla">Puebla</option>
+          <option value="León">León</option>
+          <option value="Mérida">Mérida</option>
+          <option value="Otra ciudad">Otra ciudad</option>
+        </select>
+      </div>
+      <div class="eq-grid-2">
+        <div class="eq-field-group">
+          <label class="eq-label" for="event-date">Fecha aproximada</label>
+          <input type="month" class="eq-input" id="event-date" />
+        </div>
+        <div class="eq-field-group">
+          <label class="eq-label" for="guests">Número de invitados</label>
+          <select class="eq-select" id="guests">
+            <option value="">Selecciona</option>
+            <option value="hasta 50">Hasta 50</option>
+            <option value="50 a 100">50 – 100</option>
+            <option value="100 a 200">100 – 200</option>
+            <option value="200 a 350">200 – 350</option>
+            <option value="350 a 500">350 – 500</option>
+            <option value="más de 500">Más de 500</option>
+          </select>
+        </div>
+      </div>
+      <div class="eq-field-group">
+        <label class="eq-label">Presupuesto de referencia <span style="color:var(--text-muted);font-size:10px;text-transform:none;letter-spacing:0;">(opcional)</span></label>
+        <div class="eq-slider-wrap">
+          <input type="range" class="eq-slider" id="budget" min="50" max="2000" step="50" value="300" oninput="updateBudget(this.value)">
+          <span class="eq-slider-val" id="budget-val">$300,000</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:10px;color:var(--text-muted);">$50,000 MXN</span>
+          <span style="font-size:10px;color:var(--text-muted);">$2,000,000+ MXN</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="eq-btn-secondary" onclick="goStep(1)">← Atrás</button>
+        <button class="eq-btn-primary" style="margin-top:0;flex:1;" onclick="goStep(3)">Continuar</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: SERVICIOS -->
+    <div class="eq-section" id="section-3">
+      <h2 class="eq-headline">¿Qué servicios<br><em>necesitas?</em></h2>
+      <p class="eq-sub">Selecciona todos los que apliquen. El AI calculará el estimado por cada uno.</p>
+      <div class="eq-services-grid" id="services-grid"></div>
+      <div class="eq-error" id="error-msg">Por favor selecciona al menos un servicio.</div>
+      <div style="display:flex;gap:10px;margin-top:24px;">
+        <button class="eq-btn-secondary" onclick="goStep(2)">← Atrás</button>
+        <button class="eq-btn-primary" style="margin-top:0;flex:1;" onclick="cotizar()">Generar Cotización AI</button>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="eq-loading" id="loading-state">
+      <div class="eq-spinner"></div>
+      <span class="eq-loading-text">Analizando precios de mercado...</span>
+    </div>
+
+    <!-- RESULT -->
+    <div class="eq-result" id="result-section">
+      <div class="eq-result-header">
+        <div class="eq-result-event-name" id="result-title"></div>
+        <div class="eq-result-meta" id="result-meta"></div>
+      </div>
+      <div class="eq-total-card">
+        <div>
+          <div class="eq-total-label">Inversión total estimada</div>
+          <div class="eq-total-amount" id="result-total"></div>
+          <div class="eq-total-range" id="result-range"></div>
+        </div>
+        <div class="eq-total-icon" id="result-icon">✦</div>
+      </div>
+      <div class="eq-breakdown-title">Desglose por servicio</div>
+      <ul class="eq-breakdown-list" id="breakdown-list"></ul>
+      <div class="eq-ai-note" id="ai-note"></div>
+      <div class="eq-cta-section">
+        <div class="eq-cta-text">¿Listo para conectar con proveedores verificados en tu ciudad? Recibe hasta 3 cotizaciones reales sin costo.</div>
+        <a href="#contacto" class="eq-cta-btn">Ver proveedores →</a>
+      </div>
+      <div style="margin-top:16px;text-align:center;">
+        <button class="eq-btn-secondary" onclick="resetQuoter()">Nueva cotización</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="eq-footer">
+    <span class="eq-footer-brand">EventIQ<span style="color:var(--gold);">.</span>mx</span>
+    <span class="eq-footer-note">Cotizaciones estimadas · Precios reales pueden variar · México 2025</span>
+  </footer>
+
+  <!-- SCRIPT -->
+  <script>
+    const SERVICES_WEDDING = [
+      { id:'venue',         icon:'⌂', label:'Salón / Venue',       note:'Ceremonia y recepción' },
+      { id:'catering',      icon:'◎', label:'Banquete & Catering',  note:'Menú, meseros, cocina' },
+      { id:'toldo',         icon:'◻', label:'Toldo / Carpa',        note:'Estructura exterior' },
+      { id:'tarima',        icon:'⊟', label:'Tarima & Escenario',   note:'Pista de baile' },
+      { id:'floreria',      icon:'✿', label:'Floristería & Decor',  note:'Centros de mesa' },
+      { id:'foto',          icon:'◉', label:'Fotografía & Video',   note:'Cobertura completa' },
+      { id:'musica',        icon:'♩', label:'Música & DJ',          note:'Banda, DJ, sonido' },
+      { id:'iluminacion',   icon:'◇', label:'Iluminación',          note:'Luces y efectos' },
+      { id:'banos',         icon:'⊕', label:'Baños de Lujo',        note:'Trailers premium' },
+      { id:'wedding_plan',  icon:'⊞', label:'Wedding Planner',      note:'Coordinación integral' },
+      { id:'pastel',        icon:'◈', label:'Pastel & Mesa Dulces', note:'Repostería especial' },
+      { id:'transporte',    icon:'⊡', label:'Transporte',           note:'Traslados, auto nupcial' },
+    ];
+
+    const SERVICES_CORP = [
+      { id:'venue',       icon:'⌂', label:'Venue Corporativo',    note:'Salón, auditorio' },
+      { id:'av',          icon:'◉', label:'Audio & Video',        note:'Pantallas, sonido' },
+      { id:'catering',    icon:'◎', label:'Catering Ejecutivo',   note:'Coffee break, banquete' },
+      { id:'tarima',      icon:'⊟', label:'Escenario & Tarima',   note:'Ponencias, presentaciones' },
+      { id:'toldo',       icon:'◻', label:'Toldo / Estructura',   note:'Espacios exteriores' },
+      { id:'iluminacion', icon:'◇', label:'Iluminación',          note:'Luz ambiental' },
+      { id:'banos',       icon:'⊕', label:'Baños Portátiles',     note:'Sanitarios de calidad' },
+      { id:'foto',        icon:'⊚', label:'Fotografía & Video',   note:'Cobertura corporativa' },
+      { id:'decoracion',  icon:'✦', label:'Branding & Decor',     note:'Señalética, ambiente' },
+      { id:'logistica',   icon:'⊞', label:'Coordinación',         note:'Producción y logística' },
+      { id:'tecnologia',  icon:'◈', label:'Tecnología',           note:'App evento, registro' },
+      { id:'transporte',  icon:'⊡', label:'Transporte',           note:'Traslados, valet' },
+    ];
+
+    let state = { type: null, city: '', date: '', guests: '', budget: 300, services: new Set() };
+
+    function selectType(t) {
+      state.type = t;
+      document.getElementById('card-wedding').classList.remove('selected-wedding','selected-corp');
+      document.getElementById('card-corp').classList.remove('selected-wedding','selected-corp');
+      document.getElementById('card-' + t).classList.add('selected-' + t);
+      document.getElementById('btn-step1').disabled = false;
+    }
+
+    function updateBudget(val) {
+      state.budget = parseInt(val);
+      document.getElementById('budget-val').textContent = '$' + (state.budget * 1000).toLocaleString('es-MX');
+    }
+
+    function buildServicesGrid() {
+      const services = state.type === 'wedding' ? SERVICES_WEDDING : SERVICES_CORP;
+      const grid = document.getElementById('services-grid');
+      grid.innerHTML = '';
+      state.services.clear();
+      services.forEach(s => {
+        const d = document.createElement('div');
+        d.className = 'eq-service-chip';
+        d.innerHTML = `<div class="chip-dot"></div><div><div>${s.label}</div></div>`;
+        d.onclick = () => {
+          if (state.services.has(s.id)) { state.services.delete(s.id); d.classList.remove('active'); }
+          else { state.services.add(s.id); d.classList.add('active'); }
+        };
+        grid.appendChild(d);
+      });
+    }
+
+    function goStep(step) {
+      ['section-1','section-2','section-3'].forEach(id => document.getElementById(id).classList.remove('visible'));
+      if (step === 1) { document.getElementById('section-1').classList.add('visible'); setStepActive(1); }
+      else if (step === 2) { document.getElementById('section-2').classList.add('visible'); setStepActive(2); }
+      else if (step === 3) {
+        state.city = document.getElementById('city').value;
+        state.date = document.getElementById('event-date').value;
+        state.guests = document.getElementById('guests').value;
+        buildServicesGrid();
+        document.getElementById('section-3').classList.add('visible');
+        setStepActive(3);
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function setStepActive(n) {
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById('s' + i);
+        el.classList.remove('active','done');
+        if (i < n) el.classList.add('done');
+        else if (i === n) el.classList.add('active');
+      }
+    }
+
+    async function cotizar() {
+      if (state.services.size === 0) {
+        document.getElementById('error-msg').classList.add('visible'); return;
+      }
+      document.getElementById('error-msg').classList.remove('visible');
+      document.getElementById('section-3').classList.remove('visible');
+      document.getElementById('loading-state').classList.add('visible');
+      setStepActive(4);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      const allServices = state.type === 'wedding' ? SERVICES_WEDDING : SERVICES_CORP;
+      const selected = allServices.filter(s => state.services.has(s.id)).map(s => s.label);
+
+      const prompt = `Eres un experto en costos de eventos en México. Genera una cotización detallada en JSON para el siguiente evento:
+
+Tipo: ${state.type === 'wedding' ? 'Boda/Quinceañera' : 'Evento Corporativo'}
+Ciudad: ${state.city || 'México'}
+Invitados: ${state.guests || '100 a 200'}
+Presupuesto referencia: $${(state.budget * 1000).toLocaleString('es-MX')} MXN
+Servicios: ${selected.join(', ')}
+
+Responde ÚNICAMENTE con JSON válido, sin texto adicional ni backticks:
+{
+  "total_min": número en MXN,
+  "total_max": número en MXN,
+  "nota_ai": "1-2 oraciones con insight de mercado específico para esta ciudad y tipo de evento",
+  "servicios": [
+    { "nombre": "nombre", "icono": "emoji", "precio_min": número, "precio_max": número, "nota": "máx 6 palabras" }
+  ]
+}
+
+Precios realistas del mercado mexicano 2024-2025. Ciudad pequeña = 20-30% menos que CDMX.`;
+
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1000,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+        const data = await res.json();
+        const text = (data.content || []).map(i => i.text || '').join('');
+        const result = JSON.parse(text.replace(/```json|```/g, '').trim());
+        renderResult(result);
+      } catch(e) {
+        renderFallback(selected);
+      }
+    }
+
+    function fmt(n) {
+      return '$' + Math.round(n).toLocaleString('es-MX');
+    }
+
+    function renderResult(data) {
+      document.getElementById('loading-state').classList.remove('visible');
+      document.getElementById('result-section').classList.add('visible');
+      const label = state.type === 'wedding' ? 'Boda' : 'Evento Corporativo';
+      document.getElementById('result-title').textContent = label + (state.city ? ' — ' + state.city : '');
+      document.getElementById('result-meta').textContent = [
+        state.guests ? state.guests + ' invitados' : '',
+        state.date ? formatDate(state.date) : ''
+      ].filter(Boolean).join('  ·  ');
+      document.getElementById('result-total').textContent = fmt(data.total_min);
+      document.getElementById('result-range').textContent = 'Rango estimado: ' + fmt(data.total_min) + ' – ' + fmt(data.total_max);
+      document.getElementById('result-icon').textContent = state.type === 'wedding' ? '✦' : '◈';
+      const list = document.getElementById('breakdown-list');
+      list.innerHTML = '';
+      (data.servicios || []).forEach(s => {
+        const li = document.createElement('li');
+        li.className = 'eq-breakdown-item';
+        li.innerHTML = `
+          <div class="eq-bi-left">
+            <span class="eq-bi-icon">${s.icono || '·'}</span>
+            <div><div class="eq-bi-name">${s.nombre}</div><div class="eq-bi-note">${s.nota || ''}</div></div>
+          </div>
+          <div>
+            <div class="eq-bi-price">${fmt(s.precio_min)}</div>
+            <div class="eq-bi-range">hasta ${fmt(s.precio_max)}</div>
+          </div>`;
+        list.appendChild(li);
+      });
+      document.getElementById('ai-note').innerHTML = '<strong>Nota del AI:</strong> ' + (data.nota_ai || '');
+    }
+
+    function renderFallback(selected) {
+      renderResult({
+        total_min: state.budget * 700,
+        total_max: state.budget * 1300,
+        nota_ai: 'Estimado basado en promedios del mercado mexicano 2025. Los precios finales varían según proveedor, temporada y disponibilidad.',
+        servicios: selected.map((name, i) => ({
+          nombre: name,
+          icono: ['⌂','◎','◻','◉','✿','◇','♩','⊕','⊞','⊡'][i % 10],
+          precio_min: Math.round(state.budget * 700 / selected.length / 1000) * 1000,
+          precio_max: Math.round(state.budget * 1300 / selected.length / 1000) * 1000,
+          nota: 'Precio promedio de mercado'
+        }))
+      });
+    }
+
+    function formatDate(ym) {
+      if (!ym) return '';
+      const [y, m] = ym.split('-');
+      const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      return months[parseInt(m) - 1] + ' ' + y;
+    }
+
+    function resetQuoter() {
+      state = { type: null, city: '', date: '', guests: '', budget: 300, services: new Set() };
+      document.getElementById('card-wedding').classList.remove('selected-wedding','selected-corp');
+      document.getElementById('card-corp').classList.remove('selected-wedding','selected-corp');
+      document.getElementById('btn-step1').disabled = true;
+      document.getElementById('result-section').classList.remove('visible');
+      document.getElementById('loading-state').classList.remove('visible');
+      document.getElementById('budget-val').textContent = '$300,000';
+      document.getElementById('budget').value = 300;
+      goStep(1);
+    }
+  </script>
+
+</body>
+</html>
